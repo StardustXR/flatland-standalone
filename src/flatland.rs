@@ -6,7 +6,10 @@ use smithay::{
 		backend::{ClientData, ClientId, DisconnectReason},
 		Display,
 	},
-	wayland::{compositor::CompositorState, shell::xdg::XdgShellState, shm::ShmState},
+	wayland::{
+		compositor::CompositorState, output::OutputManagerState, shell::xdg::XdgShellState,
+		shm::ShmState,
+	},
 };
 
 pub struct ClientState;

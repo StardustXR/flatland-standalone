@@ -16,6 +16,7 @@ use sk::{
 };
 use smithay::{
 	backend::renderer::{gles2::Gles2Texture, utils::RendererSurfaceStateUserData},
+	desktop::utils::send_frames_surface_tree,
 	reexports::wayland_server::protocol::wl_surface::WlSurface,
 	utils::user_data::UserDataMap,
 	wayland::shell::xdg::{
@@ -76,8 +77,8 @@ impl CoreSurface {
 			let sk_tex = self.sk_tex.get().unwrap();
 			unsafe {
 				sk_tex.set_native(
-					smithay_tex.tex_id() as u32,
-					smithay::backend::renderer::gles2::ffi::SRGB,
+					smithay_tex.tex_id() as usize,
+					smithay::backend::renderer::gles2::ffi::RGBA8.into(),
 					TextureType::Image,
 					size.0 as u32,
 					size.1 as u32,

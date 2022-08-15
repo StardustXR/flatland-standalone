@@ -10,6 +10,7 @@ use sk::lifecycle::Settings;
 use slog::Drain;
 use smithay::{
 	backend::{egl::EGLContext, renderer::gles2::Gles2Renderer},
+	desktop::utils::send_frames_surface_tree,
 	reexports::wayland_server::{Display, ListeningSocket},
 	wayland::compositor,
 };
@@ -79,6 +80,10 @@ fn main() -> Result<()> {
 						let top_level = data.data_map.get::<XdgTopLevel>().unwrap();
 						top_level.step(&stereokit, draw_ctx, &data.data_map);
 					});
+					send_frames_surface_tree(
+						surf.wl_surface(),
+						(stereokit.time_getf() * 1000.) as u32,
+					);
 				}
 			});
 		},
@@ -126,7 +131,7 @@ fn main() -> Result<()> {
 // 		)
 // 		.unwrap();
 // 	let smithay_sk_tex =
-// 		Texture::create(&stereokit, TextureType::Image, TextureFormat::RGBA32Linear)?;
+// Texture::create(&stereokit, TextureType::Image, TextureFormat::RGBA32)?;
 // 	unsafe {
 // 		smithay_sk_tex.set_native(
 // 			smithay_tex.tex_id() as u32,
