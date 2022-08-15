@@ -23,10 +23,13 @@ impl CompositorHandler for Flatland {
 		compositor::with_states(surface, |data| {
 			if let Some(surface_states) = data.data_map.get::<RendererSurfaceStateUserData>() {
 				if let Some(core_surface) = data.data_map.get::<CoreSurface>() {
-					*core_surface.wl_tex.borrow_mut() = surface_states
-						.borrow()
-						.texture(&self.renderer)
-						.map(|tex| tex.clone());
+					core_surface.wl_tex.replace_with(|_| {
+						println!("Replacing old outdated texture");
+						surface_states.borrow().texture(&self.renderer).map(|tex| {
+							dbg!(tex.tex_id());
+							tex.clone()
+						})
+					});
 				}
 			}
 		});

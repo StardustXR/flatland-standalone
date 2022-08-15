@@ -78,7 +78,7 @@ impl CoreSurface {
 			unsafe {
 				sk_tex.set_native(
 					smithay_tex.tex_id() as usize,
-					smithay::backend::renderer::gles2::ffi::RGBA8.into(),
+					smithay::backend::renderer::gles2::ffi::SRGB.into(),
 					TextureType::Image,
 					size.0 as u32,
 					size.1 as u32,
