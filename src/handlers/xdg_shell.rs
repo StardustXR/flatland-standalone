@@ -18,6 +18,8 @@ impl XdgShellHandler for Flatland {
 		_dh: &smithay::reexports::wayland_server::DisplayHandle,
 		surface: smithay::wayland::shell::xdg::ToplevelSurface,
 	) {
+		self.output
+			.enter(&self.display_handle, surface.wl_surface());
 		surface.send_configure();
 		compositor::with_states(surface.wl_surface(), |data| {
 			data.data_map
