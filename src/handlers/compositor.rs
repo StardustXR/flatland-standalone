@@ -24,9 +24,9 @@ impl CompositorHandler for Flatland {
 			if let Some(surface_states) = data.data_map.get::<RendererSurfaceStateUserData>() {
 				if let Some(core_surface) = data.data_map.get::<CoreSurface>() {
 					core_surface.wl_tex.replace_with(|_| {
-						println!("Replacing old outdated texture");
+						// println!("Replacing old outdated texture");
 						surface_states.borrow().texture(&self.renderer).map(|tex| {
-							dbg!(tex.tex_id());
+							// dbg!(tex.tex_id());
 							tex.clone()
 						})
 					});
