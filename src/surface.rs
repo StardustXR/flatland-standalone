@@ -6,17 +6,16 @@ use prisma::{Rgb, Rgba};
 use sk::{
 	enums::RenderLayer,
 	lifecycle::DrawContext,
-	material::{Material, DEFAULT_ID_MATERIAL_UNLIT},
+	material::Material,
 	model::Model,
 	pose::Pose,
 	shader::Shader,
-	texture::{Texture, TextureFormat, TextureSample, TextureType},
+	texture::{TextureAddress, TextureFormat, TextureSample, TextureType},
 	ui::{MoveType, WindowType},
 	StereoKit,
 };
 use smithay::{
-	backend::renderer::{gles2::Gles2Texture, utils::RendererSurfaceStateUserData},
-	desktop::utils::send_frames_surface_tree,
+	backend::renderer::{gles2::Gles2Texture, utils::RendererSurfaceStateUserData, Texture},
 	reexports::wayland_server::protocol::wl_surface::WlSurface,
 	utils::user_data::UserDataMap,
 	wayland::shell::xdg::{
@@ -37,7 +36,7 @@ const PANEL_MODEL_BYTES: &[u8] = include_bytes!("../res/panel.glb");
 pub struct CoreSurface {
 	wl_surface: WlSurface,
 	pub(crate) wl_tex: RefCell<Option<Gles2Texture>>,
-	sk_tex: OnceCell<Texture>,
+	sk_tex: OnceCell<sk::texture::Texture>,
 	sk_model: OnceCell<Model>,
 }
 
@@ -54,14 +53,15 @@ impl CoreSurface {
 	pub fn update_tex(&self, sk: &StereoKit, data: &UserDataMap) {
 		self.sk_tex
 			.get_or_try_init(|| {
-				Texture::create(sk, TextureType::ImageNoMips, TextureFormat::RGBA32).ok_or(Error)
+				sk::texture::Texture::create(sk, TextureType::ImageNoMips, TextureFormat::RGBA32)
+					.ok_or(Error)
 			})
 			.unwrap();
 		self.sk_model
 			.get_or_try_init::<_, Error>(|| {
-				// let shader = Shader::from_mem(sk, SIMULA_SHADER_BYTES).unwrap();
-				// let material = Material::create(sk, &shader).unwrap();
-				let material = Material::copy_from_id(sk, DEFAULT_ID_MATERIAL_UNLIT).unwrap();
+				let shader = Shader::from_mem(sk, SIMULA_SHADER_BYTES).unwrap();
+				let material = Material::create(sk, &shader).unwrap();
+				// let material = Material::copy_from_id(sk, DEFAULT_ID_MATERIAL_UNLIT).unwrap();
 				material.set_parameter("diffuse", self.sk_tex.get().unwrap());
 				let model = Model::from_mem(sk, "panel.glb", PANEL_MODEL_BYTES, None).unwrap();
 				model.set_material(0, &material);
@@ -69,21 +69,17 @@ impl CoreSurface {
 			})
 			.unwrap();
 		if let Some(smithay_tex) = self.wl_tex.borrow().as_ref() {
-			let size = data
-				.get::<RendererSurfaceStateUserData>()
-				.and_then(|f| f.borrow().buffer_size())
-				.map(|f| (f.w, f.h))
-				.unwrap_or((512, 512));
 			let sk_tex = self.sk_tex.get().unwrap();
 			unsafe {
 				sk_tex.set_native(
 					smithay_tex.tex_id() as usize,
-					smithay::backend::renderer::gles2::ffi::SRGB.into(),
+					smithay::backend::renderer::gles2::ffi::RGBA8.into(),
 					TextureType::Image,
-					size.0 as u32,
-					size.1 as u32,
+					smithay_tex.width() as u32,
+					smithay_tex.height() as u32,
 				);
 				sk_tex.set_sample(TextureSample::Point);
+				sk_tex.set_address_mode(TextureAddress::Clamp);
 			}
 		}
 	}
