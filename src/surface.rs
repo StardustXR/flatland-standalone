@@ -27,6 +27,7 @@ use smithay::{
 };
 use std::{
 	cell::{Cell, RefCell},
+	f32::consts::PI,
 	fmt::Error,
 	sync::Mutex,
 };
@@ -107,7 +108,7 @@ impl CoreSurface {
 			draw_ctx,
 			Mat4::from_scale_rotation_translation(
 				vec3(size.0, size.1, 0.01),
-				Quat::IDENTITY,
+				Quat::from_axis_angle(vec3(0., 1., 0.), PI),
 				vec3(0., -size.1 / 2., 0.005),
 			)
 			.into(),
