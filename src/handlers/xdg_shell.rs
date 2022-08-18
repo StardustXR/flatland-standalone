@@ -4,6 +4,10 @@ use crate::{
 };
 use smithay::{
 	delegate_xdg_shell,
+	reexports::wayland_protocols::xdg::{
+		decoration::zv1::server::zxdg_toplevel_decoration_v1::Mode,
+		shell::server::xdg_toplevel::State,
+	},
 	wayland::{compositor, shell::xdg::XdgShellHandler},
 };
 use stereokit::pose::Pose;
@@ -20,7 +24,12 @@ impl XdgShellHandler for Flatland {
 	) {
 		self.output
 			.enter(&self.display_handle, surface.wl_surface());
+		surface.with_pending_state(|state| {
+			state.states.set(State::Fullscreen);
+			state.decoration_mode = Some(Mode::ServerSide);
+		});
 		surface.send_configure();
+
 		compositor::with_states(surface.wl_surface(), |data| {
 			data.data_map
 				.insert_if_missing(|| CoreSurface::new(surface.wl_surface().clone()));
