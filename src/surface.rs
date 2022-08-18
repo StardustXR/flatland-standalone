@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
-use glam::{vec3, Mat4, Quat};
+use glam::{vec3, Mat4, Quat, Vec2};
+use mint::Vector2;
 use once_cell::unsync::OnceCell;
 use prisma::{Rgb, Rgba};
 use sk::{
@@ -37,6 +38,7 @@ pub struct CoreSurface {
 	wl_surface: WlSurface,
 	pub(crate) wl_tex: RefCell<Option<Gles2Texture>>,
 	sk_tex: OnceCell<sk::texture::Texture>,
+	sk_mat: OnceCell<Material>,
 	sk_model: OnceCell<Model>,
 }
 
@@ -46,30 +48,38 @@ impl CoreSurface {
 			wl_surface,
 			wl_tex: RefCell::new(None),
 			sk_tex: OnceCell::new(),
+			sk_mat: OnceCell::new(),
 			sk_model: OnceCell::new(),
 		}
 	}
 
 	pub fn update_tex(&self, sk: &StereoKit, data: &UserDataMap) {
-		self.sk_tex
+		let sk_tex = self
+			.sk_tex
 			.get_or_try_init(|| {
 				sk::texture::Texture::create(sk, TextureType::ImageNoMips, TextureFormat::RGBA32)
 					.ok_or(Error)
 			})
 			.unwrap();
-		self.sk_model
-			.get_or_try_init::<_, Error>(|| {
+		let sk_mat = self
+			.sk_mat
+			.get_or_try_init(|| {
 				let shader = Shader::from_mem(sk, SIMULA_SHADER_BYTES).unwrap();
-				let material = Material::create(sk, &shader).unwrap();
-				// let material = Material::copy_from_id(sk, DEFAULT_ID_MATERIAL_UNLIT).unwrap();
-				material.set_parameter("diffuse", self.sk_tex.get().unwrap());
+				Material::create(sk, &shader).ok_or(Error).map(|mat| {
+					mat.set_parameter("diffuse", self.sk_tex.get().unwrap());
+					mat
+				})
+			})
+			.unwrap();
+		let sk_model = self
+			.sk_model
+			.get_or_try_init::<_, Error>(|| {
 				let model = Model::from_mem(sk, "panel.glb", PANEL_MODEL_BYTES, None).unwrap();
-				model.set_material(0, &material);
+				model.set_material(0, sk_mat);
 				Ok(model)
 			})
 			.unwrap();
 		if let Some(smithay_tex) = self.wl_tex.borrow().as_ref() {
-			let sk_tex = self.sk_tex.get().unwrap();
 			unsafe {
 				sk_tex.set_native(
 					smithay_tex.tex_id() as usize,
@@ -78,6 +88,12 @@ impl CoreSurface {
 					smithay_tex.width() as u32,
 					smithay_tex.height() as u32,
 				);
+				let size: mint::Vector2<f32> = Vec2 {
+					x: smithay_tex.width() as f32,
+					y: smithay_tex.height() as f32,
+				}
+				.into();
+				sk_mat.set_parameter("size", &size);
 				sk_tex.set_sample(TextureSample::Point);
 				sk_tex.set_address_mode(TextureAddress::Clamp);
 			}
