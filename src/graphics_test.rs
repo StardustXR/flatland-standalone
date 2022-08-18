@@ -19,7 +19,13 @@ use stereokit::{
 pub static STARDUST_PNG: &[u8] = include_bytes!("../../stardust-assets/icon.png");
 
 #[test]
-fn grahics() -> Result<()> {
+pub fn stereokit() {
+	let stereokit = Settings::default().init().unwrap();
+	stereokit.run(|_| {}, || {});
+}
+
+#[test]
+pub fn graphics() -> Result<()> {
 	let log = ::slog::Logger::root(::slog_stdlog::StdLog.fuse(), slog::o!());
 	slog_stdlog::init().expect("Logger failed to initialize");
 
@@ -29,17 +35,15 @@ fn grahics() -> Result<()> {
 		.unwrap();
 
 	let egl_raw_handles = get_sk_egl()?;
-	let mut renderer = unsafe {
-		Gles2Renderer::new(
-			EGLContext::from_raw(
-				egl_raw_handles.display,
-				egl_raw_handles.config,
-				egl_raw_handles.context,
-				log.clone(),
-			)?,
+	let ctx = unsafe {
+		EGLContext::from_raw(
+			egl_raw_handles.display,
+			egl_raw_handles.config,
+			egl_raw_handles.context,
 			log.clone(),
 		)?
 	};
+	let mut renderer = unsafe { Gles2Renderer::new(ctx, log.clone())? };
 	let smithay_tex_image =
 		image::io::Reader::with_format(std::io::Cursor::new(STARDUST_PNG), image::ImageFormat::Png)
 			.decode()
