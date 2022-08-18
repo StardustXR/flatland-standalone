@@ -27,15 +27,16 @@ impl InputWindow {
 		events: winit_main::EventReceiver,
 	) -> Result<Self> {
 		let window = event_loop.create_window(WindowAttributes::default())?;
-		window.set_title("Flatland Input (click to grab input)");
-
-		Ok(InputWindow {
+		let mut input_window = InputWindow {
 			event_loop,
 			events: Rc::new(events),
 			window,
-			grabbed: false,
+			grabbed: true,
 			modifiers: ModifiersState::empty(),
-		})
+		};
+		input_window.set_grab(false);
+
+		Ok(input_window)
 	}
 
 	pub fn handle_events(&mut self, sk: &StereoKit) {
