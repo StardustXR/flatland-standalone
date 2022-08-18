@@ -35,105 +35,25 @@ impl XdgShellHandler for Flatland {
 		surface: smithay::wayland::shell::xdg::PopupSurface,
 		positioner: smithay::wayland::shell::xdg::PositionerState,
 	) {
+		self.output
+			.enter(&self.display_handle, surface.wl_surface());
+		let _ = surface.send_configure();
 		compositor::with_states(surface.wl_surface(), |data| {
 			data.data_map
 				.insert_if_missing(|| CoreSurface::new(surface.wl_surface().clone()));
-			data.data_map.insert_if_missing(|| XdgPopup {
-				shell_surf: surface.clone(),
-				positioner,
-			});
+			data.data_map
+				.insert_if_missing(|| XdgPopup::new(surface.clone(), positioner));
 		});
-	}
-
-	fn move_request(
-		&mut self,
-		dh: &smithay::reexports::wayland_server::DisplayHandle,
-		surface: smithay::wayland::shell::xdg::ToplevelSurface,
-		seat: smithay::reexports::wayland_server::protocol::wl_seat::WlSeat,
-		serial: smithay::wayland::Serial,
-	) {
-	}
-
-	fn resize_request(
-		&mut self,
-		dh: &smithay::reexports::wayland_server::DisplayHandle,
-		surface: smithay::wayland::shell::xdg::ToplevelSurface,
-		seat: smithay::reexports::wayland_server::protocol::wl_seat::WlSeat,
-		serial: smithay::wayland::Serial,
-		edges: smithay::reexports::wayland_protocols::xdg::shell::server::xdg_toplevel::ResizeEdge,
-	) {
 	}
 
 	fn grab(
 		&mut self,
-		dh: &smithay::reexports::wayland_server::DisplayHandle,
-		surface: smithay::wayland::shell::xdg::PopupSurface,
-		seat: smithay::reexports::wayland_server::protocol::wl_seat::WlSeat,
-		serial: smithay::wayland::Serial,
+		_dh: &smithay::reexports::wayland_server::DisplayHandle,
+		_surface: smithay::wayland::shell::xdg::PopupSurface,
+		_seat: smithay::reexports::wayland_server::protocol::wl_seat::WlSeat,
+		_serial: smithay::wayland::Serial,
 	) {
-	}
-
-	fn maximize_request(
-		&mut self,
-		dh: &smithay::reexports::wayland_server::DisplayHandle,
-		surface: smithay::wayland::shell::xdg::ToplevelSurface,
-	) {
-	}
-
-	fn unmaximize_request(
-		&mut self,
-		dh: &smithay::reexports::wayland_server::DisplayHandle,
-		surface: smithay::wayland::shell::xdg::ToplevelSurface,
-	) {
-	}
-
-	fn fullscreen_request(
-		&mut self,
-		dh: &smithay::reexports::wayland_server::DisplayHandle,
-		surface: smithay::wayland::shell::xdg::ToplevelSurface,
-		output: Option<smithay::reexports::wayland_server::protocol::wl_output::WlOutput>,
-	) {
-	}
-
-	fn unfullscreen_request(
-		&mut self,
-		dh: &smithay::reexports::wayland_server::DisplayHandle,
-		surface: smithay::wayland::shell::xdg::ToplevelSurface,
-	) {
-	}
-
-	fn minimize_request(
-		&mut self,
-		dh: &smithay::reexports::wayland_server::DisplayHandle,
-		surface: smithay::wayland::shell::xdg::ToplevelSurface,
-	) {
-	}
-
-	fn show_window_menu(
-		&mut self,
-		dh: &smithay::reexports::wayland_server::DisplayHandle,
-		surface: smithay::wayland::shell::xdg::ToplevelSurface,
-		seat: smithay::reexports::wayland_server::protocol::wl_seat::WlSeat,
-		serial: smithay::wayland::Serial,
-		location: smithay::utils::Point<i32, smithay::utils::Logical>,
-	) {
-	}
-
-	fn ack_configure(
-		&mut self,
-		dh: &smithay::reexports::wayland_server::DisplayHandle,
-		surface: smithay::reexports::wayland_server::protocol::wl_surface::WlSurface,
-		configure: smithay::wayland::shell::xdg::Configure,
-	) {
-	}
-
-	fn reposition_request(
-		&mut self,
-		dh: &smithay::reexports::wayland_server::DisplayHandle,
-		surface: smithay::wayland::shell::xdg::PopupSurface,
-		positioner: smithay::wayland::shell::xdg::PositionerState,
-		token: u32,
-	) {
+		todo!()
 	}
 }
 delegate_xdg_shell!(Flatland);

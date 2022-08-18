@@ -19,7 +19,7 @@ use smithay::{
 };
 use std::{ffi::c_void, sync::Arc};
 use stereokit as sk;
-use surface::{Surface, XdgTopLevel};
+use surface::{Surface, XdgPopup, XdgTopLevel};
 
 struct EGLRawHandles {
 	display: *const c_void,
@@ -88,6 +88,18 @@ fn main() {
 							compositor::with_states(surf.wl_surface(), |data| {
 								let top_level = data.data_map.get::<XdgTopLevel>().unwrap();
 								top_level.step(&stereokit, draw_ctx, &data.data_map);
+							});
+							send_frames_surface_tree(
+								surf.wl_surface(),
+								(stereokit.time_getf() * 1000.) as u32,
+							);
+						}
+					});
+					flatland.xdg_shell_state.popup_surfaces(|surfs| {
+						for surf in surfs.iter() {
+							compositor::with_states(surf.wl_surface(), |data| {
+								let popup = data.data_map.get::<XdgPopup>().unwrap();
+								popup.step(&stereokit, draw_ctx, &data.data_map);
 							});
 							send_frames_surface_tree(
 								surf.wl_surface(),

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use glam::{vec3, Mat4, Quat, Vec2};
+use glam::{vec3, Mat4, Quat, Vec2, Vec3};
 use once_cell::unsync::OnceCell;
 use prisma::{Rgb, Rgba};
 use sk::{
@@ -18,8 +18,11 @@ use smithay::{
 	backend::renderer::{gles2::Gles2Texture, utils::RendererSurfaceStateUserData, Texture},
 	reexports::wayland_server::protocol::wl_surface::WlSurface,
 	utils::user_data::UserDataMap,
-	wayland::shell::xdg::{
-		PopupSurface, PositionerState, ToplevelSurface, XdgToplevelSurfaceRoleAttributes,
+	wayland::{
+		compositor,
+		shell::xdg::{
+			PopupSurface, PositionerState, ToplevelSurface, XdgToplevelSurfaceRoleAttributes,
+		},
 	},
 };
 use std::{
@@ -192,5 +195,73 @@ impl Surface for XdgTopLevel {
 
 pub struct XdgPopup {
 	pub(crate) shell_surf: PopupSurface,
+	pub(crate) pose: RefCell<Pose>,
 	pub(crate) positioner: PositionerState,
+	pub(crate) ppm: Cell<f32>,
+}
+impl XdgPopup {
+	pub fn new(shell_surf: PopupSurface, positioner: PositionerState) -> Self {
+		let pose = shell_surf
+			.get_parent_surface()
+			.and_then(|surface| {
+				compositor::with_states(&surface, |states| {
+					states.data_map.get::<XdgTopLevel>().map(|toplevel| {
+						let mut position: Vec3 = toplevel.pose.borrow().position.into();
+						let orientation: Quat = toplevel.pose.borrow().orientation.into();
+
+						let forward_vec = orientation.mul_vec3(vec3(0., 0., -1.));
+						let up_vec = orientation.mul_vec3(vec3(0., 1., 0.));
+
+						position += forward_vec * 0.02;
+						position -= up_vec * 0.025;
+
+						Pose {
+							position: position.into(),
+							orientation: orientation.into(),
+						}
+					})
+				})
+			})
+			.unwrap_or(Pose::IDENTITY);
+		XdgPopup {
+			shell_surf,
+			pose: RefCell::new(pose),
+			positioner,
+			ppm: Cell::new(2000.),
+		}
+	}
+}
+impl Surface for XdgPopup {
+	fn wl_surface(&self) -> &WlSurface {
+		self.shell_surf.wl_surface()
+	}
+
+	fn draw(
+		&self,
+		sk: &StereoKit,
+		draw_ctx: &DrawContext,
+		data_map: &UserDataMap,
+		name: &str,
+		size: (i32, i32),
+	) {
+		let ppm = self.ppm.get();
+		let size = (size.0 as f32 / ppm, size.1 as f32 / ppm);
+
+		sk::ui::window(
+			draw_ctx,
+			name,
+			&mut self.pose.borrow_mut(),
+			mint::Vector2 {
+				x: size.0,
+				y: size.1,
+			},
+			WindowType::WindowHead,
+			MoveType::MoveFaceUser,
+			|_ui| {
+				let surf = data_map.get::<CoreSurface>().unwrap();
+				surf.update_tex(sk);
+				surf.draw(sk, draw_ctx, size);
+			},
+		);
+	}
 }
