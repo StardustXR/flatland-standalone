@@ -42,9 +42,8 @@ impl InputWindow {
 	pub fn handle_events(&mut self, sk: &StereoKit) {
 		let events = self.events.clone();
 		for event in events.try_iter() {
-			match event {
-				Event::WindowEvent { event, .. } => self.handle_window_event(sk, event),
-				_ => (),
+			if let Event::WindowEvent { event, .. } = event {
+				self.handle_window_event(sk, event)
 			}
 		}
 	}

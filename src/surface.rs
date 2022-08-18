@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 
 use glam::{vec3, Mat4, Quat, Vec2};
-use mint::Vector2;
 use once_cell::unsync::OnceCell;
 use prisma::{Rgb, Rgba};
 use sk::{
@@ -53,7 +52,7 @@ impl CoreSurface {
 		}
 	}
 
-	pub fn update_tex(&self, sk: &StereoKit, data: &UserDataMap) {
+	pub fn update_tex(&self, sk: &StereoKit) {
 		let sk_tex = self
 			.sk_tex
 			.get_or_try_init(|| {
@@ -71,8 +70,7 @@ impl CoreSurface {
 				})
 			})
 			.unwrap();
-		let sk_model = self
-			.sk_model
+		self.sk_model
 			.get_or_try_init::<_, Error>(|| {
 				let model = Model::from_mem(sk, "panel.glb", PANEL_MODEL_BYTES, None).unwrap();
 				model.set_material(0, sk_mat);
@@ -85,8 +83,8 @@ impl CoreSurface {
 					smithay_tex.tex_id() as usize,
 					smithay::backend::renderer::gles2::ffi::RGBA8.into(),
 					TextureType::Image,
-					smithay_tex.width() as u32,
-					smithay_tex.height() as u32,
+					smithay_tex.width(),
+					smithay_tex.height(),
 				);
 				let size: mint::Vector2<f32> = Vec2 {
 					x: smithay_tex.width() as f32,
@@ -152,7 +150,7 @@ pub struct XdgTopLevel {
 impl XdgTopLevel {
 	pub fn new(shell_surf: ToplevelSurface, pose: Pose) -> Self {
 		XdgTopLevel {
-			shell_surf: shell_surf,
+			shell_surf,
 			pose: RefCell::new(pose),
 			ppm: Cell::new(2000.),
 		}
@@ -185,7 +183,7 @@ impl Surface for XdgTopLevel {
 			MoveType::MoveFaceUser,
 			|_ui| {
 				let surf = data_map.get::<CoreSurface>().unwrap();
-				surf.update_tex(sk, data_map);
+				surf.update_tex(sk);
 				surf.draw(sk, draw_ctx, size);
 			},
 		);
