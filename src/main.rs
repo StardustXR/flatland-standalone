@@ -80,8 +80,8 @@ fn main() {
 							.handle()
 							.insert_client(client, Arc::new(ClientState));
 					}
-					display.flush_clients().unwrap();
 					display.dispatch_clients(&mut flatland).unwrap();
+					display.flush_clients().unwrap();
 
 					flatland.xdg_shell_state.toplevel_surfaces(|surfs| {
 						for surf in surfs.iter() {
