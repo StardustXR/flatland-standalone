@@ -107,6 +107,8 @@ fn main() {
 							);
 						}
 					});
+
+					unsafe { flatland.renderer.egl_context().make_current().unwrap() };
 				},
 				|| {},
 			);
