@@ -2,7 +2,6 @@ use anyhow::Result;
 use slog::Logger;
 use smithay::{
 	backend::renderer::gles2::Gles2Renderer,
-	delegate_output,
 	reexports::wayland_server::{
 		backend::{ClientData, ClientId, DisconnectReason},
 		protocol::wl_output::Subpixel,
