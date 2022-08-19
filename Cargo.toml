@@ -19,6 +19,6 @@ winit-main = "0.1.3"
 git = "https://github.com/Smithay/smithay.git"
 
 [dependencies.stereokit]
-path = "../stereokit-rs"
+git = "https://github.com/MalekiRe/stereokit-rs.git"
 default-features = false
 features = ["linux-egl"]
