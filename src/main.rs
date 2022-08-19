@@ -50,6 +50,7 @@ fn main() {
 
 			let stereokit = Settings::default()
 				.app_name("Flatland Wayland Compositor")
+				.disable_desktop_input_window(true)
 				.init()
 				.expect("StereoKit failed to initialize");
 
