@@ -89,6 +89,7 @@ impl CoreSurface {
 					TextureType::Image,
 					smithay_tex.width(),
 					smithay_tex.height(),
+					false,
 				);
 				let size: mint::Vector2<f32> = Vec2 {
 					x: smithay_tex.width() as f32,

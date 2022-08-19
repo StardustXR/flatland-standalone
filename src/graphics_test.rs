@@ -68,6 +68,7 @@ pub fn graphics() -> Result<()> {
 			TextureType::Image,
 			smithay_tex_image.width(),
 			smithay_tex_image.height(),
+			false,
 		);
 		smithay_sk_tex.set_sample(TextureSample::Linear);
 	}
